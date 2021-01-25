@@ -84,13 +84,17 @@ ChromecastTech = {
     * @see {@link http://docs.videojs.com/Player.html#play}
     */
    play: function() {
+      console.log('ChromecastTech.play()');
       if (!this.paused()) {
+         console.log('ChromecastTech.play()', 'not paused, return');
          return;
       }
       if (this.ended() && !this._isMediaLoading) {
          // Restart the current item from the beginning
+         console.log('ChromecastTech.play()', 'ended, restart from beinning', this.videojsPlayer.src() );
          this._playSource({ src: this.videojsPlayer.src() }, 0);
       } else {
+         console.log('ChromecastTech.play()', 'playOrPause');
          this._remotePlayerController.playOrPause();
       }
    },
@@ -102,6 +106,7 @@ ChromecastTech = {
     * @see {@link http://docs.videojs.com/Player.html#pause}
     */
    pause: function() {
+      console.log('ChromecastTech.pause()');
       if (!this.paused() && this._remotePlayer.canPause) {
          this._remotePlayerController.playOrPause();
       }
@@ -115,6 +120,7 @@ ChromecastTech = {
     * @see {@link http://docs.videojs.com/Player.html#paused}
     */
    paused: function() {
+      console.log('ChromecastTech.paused()?', this._remotePlayer.isPaused || this.ended() || this._remotePlayer.playerState === null);
       return this._remotePlayer.isPaused || this.ended() || this._remotePlayer.playerState === null;
    },
 
@@ -126,7 +132,9 @@ ChromecastTech = {
     * @see {@link http://docs.videojs.com/Player.html#src}
     */
    setSource: function(source) {
+      console.log('ChromecastTech.setSource()', source);
       if (this._currentSource && this._currentSource.src === source.src && this._currentSource.type === source.type) {
+         console.log('ChromecastTech.setSource()', 'skipping');
          // Skip setting the source if the `source` argument is the same as what's already
          // been set. This `setSource` function calls `this._playSource` which sends a
          // "load media" request to the Chromecast PlayerController. Because this function
@@ -159,7 +167,13 @@ ChromecastTech = {
           subtitle = this._requestSubtitle(source),
           customData = this._requestCustomData(source),
           request;
-
+          console.log('ChromecastTech._playSource()', {
+            mediaInfo,
+            title,
+            subtitle,
+            customData,
+            request
+          });
       this.trigger('waiting');
       this._clearSessionTimeout();
 
@@ -181,7 +195,11 @@ ChromecastTech = {
       this._isMediaLoading = true;
       this._hasPlayedCurrentItem = false;
       castSession.loadMedia(request)
-         .then(function() {
+         .then(function(res) {
+            console.log('ChromecastTech._playSource() loadMedia', {
+               request,
+               res
+            });
             if (!this._hasPlayedAnyItem) {
                // `triggerReady` is required here to notify the Video.js player that the
                // Tech has been initialized and is ready.
@@ -194,7 +212,9 @@ ChromecastTech = {
             this._hasPlayedAnyItem = true;
             this._isMediaLoading = false;
             this._getMediaSession().addUpdateListener(this._onMediaSessionStatusChanged.bind(this));
-         }.bind(this), this._triggerErrorEvent.bind(this));
+         }.bind(this), this._triggerErrorEvent.bind(this)).catch(function(error) {
+            console.log('ChromecastTech._playSource() error', error);
+         });
    },
 
    /**
@@ -480,6 +500,7 @@ ChromecastTech = {
     * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/readyState
     */
    readyState: function() {
+      console.log('ChromecastTech.readyState()', (this._remotePlayer.playerState === 'IDLE' || this._remotePlayer.playerState === 'BUFFERING'));
       if (this._remotePlayer.playerState === 'IDLE' || this._remotePlayer.playerState === 'BUFFERING') {
          return 0; // HAVE_NOTHING
       }
@@ -580,6 +601,7 @@ ChromecastTech = {
       var states = chrome.cast.media.PlayerState,
           playerState = this._remotePlayer.playerState;
 
+      console.log('ChromecastTech._onPlayerStateChanged()',{ states, playerState });
       if (playerState === states.PLAYING) {
          this._hasPlayedCurrentItem = true;
          this.trigger('play');
@@ -706,7 +728,8 @@ ChromecastTech = {
     * @private
     * @see http://docs.videojs.com/Player.html#event:error
     */
-   _triggerErrorEvent: function() {
+   _triggerErrorEvent: function(err) {
+      console.log('ChromecastTech._triggerErrorEvent()', err);
       this.trigger('error');
    },
 };
