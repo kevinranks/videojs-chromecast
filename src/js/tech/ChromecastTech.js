@@ -168,11 +168,11 @@ ChromecastTech = {
           customData = this._requestCustomData(source),
           request;
           console.log('ChromecastTech._playSource()', {
-            mediaInfo,
-            title,
-            subtitle,
-            customData,
-            request
+            mediaInfo: mediaInfo,
+            title: title,
+            subtitle: subtitle,
+            customData: customData,
+            request: request
           });
       this.trigger('waiting');
       this._clearSessionTimeout();
@@ -197,8 +197,8 @@ ChromecastTech = {
       castSession.loadMedia(request)
          .then(function(res) {
             console.log('ChromecastTech._playSource() loadMedia', {
-               request,
-               res
+               request: request,
+               res: res
             });
             if (!this._hasPlayedAnyItem) {
                // `triggerReady` is required here to notify the Video.js player that the
@@ -601,7 +601,7 @@ ChromecastTech = {
       var states = chrome.cast.media.PlayerState,
           playerState = this._remotePlayer.playerState;
 
-      console.log('ChromecastTech._onPlayerStateChanged()',{ states, playerState });
+      console.log('ChromecastTech._onPlayerStateChanged()',{ states: states, playerState: playerState });
       if (playerState === states.PLAYING) {
          this._hasPlayedCurrentItem = true;
          this.trigger('play');
